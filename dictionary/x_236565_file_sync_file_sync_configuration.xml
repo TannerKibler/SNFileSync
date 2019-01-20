@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?><database>
+    <element attributes="update_synch=true" extends="sys_metadata" label="File Sync Configuration" max_length="40" name="x_236565_file_sync_file_sync_configuration" type="collection">
+        <element label="Active" max_length="40" name="active" type="boolean"/>
+        <element attributes="ignore_filter_on_new=true" default="javascript:global.getNextObjNumberPadded();" display="true" label="Number" max_length="40" name="number" type="string"/>
+        <element label="Password" max_length="255" name="password" type="password2"/>
+        <element label="Source File Name" max_length="255" name="source_file_name" type="string"/>
+        <element choice="1" dependent="type" dependent_on_field="type" label="Subtype" max_length="40" name="subtype" type="string" use_dependent_field="true">
+            <choice>
+                <element dependent_value="pickup" inactive_on_update="false" label="SFTP" sequence="0" value="sftp"/>
+            </choice>
+        </element>
+        <element attributes="allow_public=true" dependent="target_table" dependent_on_field="target_table" label="Target Record" max_length="32" name="target_record" type="document_id" use_dependent_field="true"/>
+        <element attributes="allow_public=true" label="Target Table" max_length="80" name="target_table" type="table_name"/>
+        <element choice="3" default="inbound" label="Type" max_length="40" name="type" type="string">
+            <choice>
+                <element hint="File that is placed by an outside source into the file pickup location." inactive_on_update="false" label="Inbound File" sequence="0" value="inbound"/>
+                <element hint="This is  a file that File Sync will need to go pickup from somewhere else." inactive_on_update="false" label="Pickup File" sequence="1" value="pickup"/>
+            </choice>
+        </element>
+        <index name="index">
+            <element name="target_record"/>
+        </index>
+    </element>
+</database>
