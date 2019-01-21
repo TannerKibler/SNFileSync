@@ -8,10 +8,10 @@ struct stat st = {0};
 
 
 char* get_current_directory() {
-#ifdef WINDOWS
 	int toTrim = 0;
 	char* tmp = NULL;
 	tmp = malloc(MAX_PATH);
+#ifdef WINDOWS
 	GetModuleFileName( NULL, buffer, MAX_PATH );
 	strcpy(tmp, buffer);
 	toTrim = backwards_find_index(tmp, '\\'); 
@@ -21,14 +21,20 @@ char* get_current_directory() {
 	//return *buffer;
 	return tmp;
 #else
+	if (getcwd(tmp, MAX_PATH) != NULL) {
+		return tmp;
+	} else {
+		perror("getcwd() error");
+		return NULL;
+	}
 	return NULL;
 #endif
 }
 
 int ensure_dir_exists(char* l1, char* l2) {
-#ifdef WINDOWS
 	char* dir = malloc(MAX_PATH + (sizeof(char)*strlen(l1)) + (sizeof(char)*strlen(l2)) + 8);
 	dir = get_current_directory();
+#ifdef WINDOWS
 	strcat(dir, l1);
 	if (l2 != NULL) {
 		strcat(dir, "\\");
@@ -39,12 +45,33 @@ int ensure_dir_exists(char* l1, char* l2) {
 		return 1;
 	}
 	else {
-		// Failed to create directory.
 		return -1;
 	}
 	return 0;
 #else
-	return -1;
+	strcat(dir, "/");
+	strcat(dir, l1);
+	if (l2 != NULL) {
+		strcat(dir, "/");
+		strcat(dir, l2);
+	}
+	printf("Current directory: %s\n", dir);
+	// Failed to create directory.
+	DIR* directory = opendir(dir);
+	if (directory) {
+		closedir(directory);
+		return 1;
+	}
+	else if (ENOENT == errno)
+		return mkdir(dir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	else {
+		/* opendir() failed for some other reason. */
+
+		// implement some error here
+		return -1;
+	}
+
+	return 0;
 #endif
 }
 
@@ -55,6 +82,8 @@ int ensure_file_exists(char* l1, char* l2) {
 		return -1;
 	}
 	dir = get_current_directory();
+
+#ifdef WINDOWS
 	strcat(dir, l1);
 	if (l2 != NULL) {
 		strcat(dir, "\\");
@@ -62,6 +91,17 @@ int ensure_file_exists(char* l1, char* l2) {
 	}
 
 	printf("Checking for file: %s\n", dir);
+#else
+	strcat(dir, "/");
+	strcat(dir, l1);
+	if (l2 != NULL) {
+		strcat(dir, "/");
+		strcat(dir, l2);
+	}
+	
+	printf("Checking for file: %s\n", dir);
+#endif
+
 	FILE *fp = fopen(dir, "ab+");
 	if (fp)
 		return 1;

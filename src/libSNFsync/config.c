@@ -80,6 +80,10 @@ void generate_config_files(char* instance) {
 	//if (FIRST_DATA_SOURCE == NULL) {
 	//FIRST_DATA_SOURCE = pull_sources_from_instance(instance);
 	//}
+	if (ensure_dir_exists("landing", "") == -1) {
+		// implement error here
+		return;
+	}
 
 	tmp = pull_sources_from_instance(instance);
 	while(tmp) {
@@ -106,7 +110,7 @@ DATA_SOURCE* pull_sources_from_instance(char* instance) {
 	if (first_ds_in_list == NULL)
 		return NULL;
 
-	return ds;
+	return first_ds_in_list;
 }
 
 DATA_SOURCE* initialize_data_source() {
