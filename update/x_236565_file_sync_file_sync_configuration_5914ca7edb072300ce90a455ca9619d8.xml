@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="x_236565_file_sync_file_sync_configuration">
+    <x_236565_file_sync_file_sync_configuration action="INSERT_OR_UPDATE">
+        <active>false</active>
+        <number>FSC0001008</number>
+        <password/>
+        <source_file_name>*example_inbound_for_data%</source_file_name>
+        <subtype/>
+        <sys_class_name>x_236565_file_sync_file_sync_configuration</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-01-20 20:26:54</sys_created_on>
+        <sys_id>5914ca7edb072300ce90a455ca9619d8</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name/>
+        <sys_package display_value="File Sync" source="x_236565_file_sync">411da93edbc32300ce90a455ca96195f</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="File Sync">411da93edbc32300ce90a455ca96195f</sys_scope>
+        <sys_update_name>x_236565_file_sync_file_sync_configuration_5914ca7edb072300ce90a455ca9619d8</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-01-20 20:26:54</sys_updated_on>
+        <target_record>d7344e7edb072300ce90a455ca961999</target_record>
+        <target_table>sys_data_source</target_table>
+        <type>inbound</type>
+    </x_236565_file_sync_file_sync_configuration>
+</record_update>
