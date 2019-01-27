@@ -1,6 +1,6 @@
 #! /bin/sh
 
-rm /home/arch/code/c/SNFileSync/snfilesync
+rm /home/arch/code/c/SNFileSync/misc/snfilesync
 
 printf "**********************************************************************************************************************\n\n"
 
@@ -12,12 +12,12 @@ gcc -Wall -c -g /home/arch/code/c/SNFileSync/src/libSNFsync/config.c -o /home/ar
 gcc -Wall -c -g /home/arch/code/c/SNFileSync/src/libSNFsync/json.c -o /home/arch/code/c/SNFileSync/bin/static/json.o
 ar rcs /home/arch/code/c/SNFileSync/bin/static/libSNFsync.a /home/arch/code/c/SNFileSync/bin/static/core.o /home/arch/code/c/SNFileSync/bin/static/file.o /home/arch/code/c/SNFileSync/bin/static/sn_instance.o /home/arch/code/c/SNFileSync/bin/static/config.o /home/arch/code/c/SNFileSync/bin/static/json.o
  
-gcc -Wall -g -lcurl /home/arch/code/c/SNFileSync/bin/snfilesync.o -L/home/arch/code/c/SNFileSync/bin/static -lSNFsync -o /home/arch/code/c/SNFileSync/snfilesync
+gcc -Wall -g -lcurl /home/arch/code/c/SNFileSync/bin/snfilesync.o -L/home/arch/code/c/SNFileSync/bin/static -lSNFsync -o /home/arch/code/c/SNFileSync/misc/snfilesync
 
 printf "\n\n**********************************************************************************************************************\n\n"
 
 printf "**********************************************************************************************************************\n\n"
 
-/home/arch/code/c/SNFileSync/snfilesync -i dev69432 -g
+#/home/arch/code/c/SNFileSync/misc/snfilesync -i dev69432 -g
 
 printf "\n\n**********************************************************************************************************************\n\n"

@@ -75,6 +75,106 @@ int ensure_dir_exists(char* l1, char* l2) {
 #endif
 }
 
+void generate_config_file_from_source_record(SN_SOURCE_RECORD *to_store, char *path, char *file_name) {
+	char* dir = malloc(sizeof(char)*strlen(path) + (sizeof(char)*strlen(file_name)) + 8);
+	if (dir == NULL) {
+		//implement failure
+		return;
+	}
+	dir = get_current_directory();
+
+#ifdef WINDOWS
+	strcat(dir, path);
+	if (file_name != NULL) {
+		strcat(dir, "\\");
+		strcat(dir, file_name);
+	}
+	else
+		return;
+
+	printf("Checking for file: %s\n", dir);
+#else
+	strcat(dir, "/");
+	strcat(dir, path);
+	if (file_name != NULL) {
+		strcat(dir, "/");
+		strcat(dir, file_name);
+	}
+	else
+		return;
+	
+	printf("Checking for file: %s\n", dir);
+#endif
+	
+	printf("Checking for file: %s\n", dir);
+	
+	FILE *file_to_write = fopen(dir, "w");
+	if (file_to_write == NULL) {
+		//implement error library
+		return;
+	}
+
+	fprintf(file_to_write, "sys_id:%s\n", to_store->sys_id);
+	fprintf(file_to_write, "table:%s\n", to_store->table);
+	fprintf(file_to_write, "record:%s\n", to_store->record);
+	fprintf(file_to_write, "type:%s\n", to_store->type);
+
+	if (to_store->subtype != NULL)
+		fprintf(file_to_write, "subtype:%s\n", to_store->subtype);
+
+	fprintf(file_to_write, "file_name:%s\n", to_store->file_name);
+
+	fclose(file_to_write);
+	free(dir);
+}
+
+void generate_file_for_instance_config(SN_INSTANCE *instance, char *path, char *file_name) {
+	char* dir = malloc(sizeof(char)*strlen(path) + (sizeof(char)*strlen(file_name)) + 8);
+	if (dir == NULL) {
+		//implement failure
+		return;
+	}
+	dir = get_current_directory();
+
+#ifdef WINDOWS
+	strcat(dir, path);
+	if (file_name != NULL) {
+		strcat(dir, "\\");
+		strcat(dir, file_name);
+	}
+	else
+		return;
+
+	printf("Checking for file: %s\n", dir);
+#else
+	strcat(dir, "/");
+	strcat(dir, path);
+	if (file_name != NULL) {
+		strcat(dir, "/");
+		strcat(dir, file_name);
+	}
+	else
+		return;
+	
+	printf("Checking for file: %s\n", dir);
+#endif
+	
+	printf("Checking for file: %s\n", dir);
+	
+	FILE *file_to_write = fopen(dir, "w");
+	if (file_to_write == NULL) {
+		//implement error library
+		return;
+	}
+
+	fprintf(file_to_write, "username:%s\n", instance->username);
+	fprintf(file_to_write, "password:%s\n", instance->password);
+	fprintf(file_to_write, "instance::%s\n", instance->host_name);
+
+	fclose(file_to_write);
+	free(dir);
+}
+
 int ensure_file_exists(char* l1, char* l2) {
 	char* dir = malloc(sizeof(char)*strlen(l1) + (sizeof(char)*strlen(l2)) + 8);
 	if (dir == NULL) {

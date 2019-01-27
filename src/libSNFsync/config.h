@@ -15,6 +15,8 @@ extern "C" {
 
 struct SN_INSTANCE {
 	char* host_name;
+	char* username;
+	char* password;
 	struct SN_INSTANCE *next;
 };
 
@@ -42,7 +44,7 @@ typedef struct PUSH_CONFIG PUSH_CONFIG;
 
 void push_all_files();
 
-void generate_config_files();
+void generate_config_files(char *instance, char *username, char *password);
 SN_SOURCE_RECORD* pull_sources_from_instance();
 void set_sys_sn_source_record(SN_SOURCE_RECORD **ds, char *sys);
 void set_name_sn_source_record(SN_SOURCE_RECORD **ds, char *name);
@@ -51,13 +53,16 @@ void set_type_sn_source_record(SN_SOURCE_RECORD **sn_source, char *type);
 void set_record_sn_source_record(SN_SOURCE_RECORD **sn_source, char *record);
 void set_subtype_sn_source_record(SN_SOURCE_RECORD **sn_source, char *subtype);
 SN_SOURCE_RECORD* initialize_sn_source_record();
+SN_INSTANCE* initialize_sn_instance();
 
 PUSH_CONFIG* initialize_push_config();
 void set_end_file_name(PUSH_CONFIG **push, char *name);
 void set_prepend_file(PUSH_CONFIG **push, char *prep_file);
 void set_append_file(PUSH_CONFIG **push, char *app_file);
 void set_file_filter(PUSH_CONFIG **push, char *filter);
-void parse_returned_sn_source_records(char *sources);
+SN_SOURCE_RECORD* parse_returned_sn_source_records(char *sources);
+
+int is_sn_source_record_complete(SN_SOURCE_RECORD *to_test);
 
 int seek_keys(char *str);
 

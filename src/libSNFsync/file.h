@@ -18,11 +18,17 @@ extern "C" {
 
 #include <stdio.h>
 #include "core.h"
+#include "config.h"
+
+typedef struct SN_SOURCE_RECORD SN_SOURCE_RECORD;
+typedef struct SN_INSTANCE SN_INSTANCE;
 
 int ensure_dir_exists(char* l1, char* l2);
 int ensure_file_exists(char* l1, char* l2);
 char* get_current_directory();
 char* read_file_to_buffer(char* fileName);
+void generate_config_file_from_source_record(SN_SOURCE_RECORD *to_store, char *path, char *file_name);
+void generate_file_for_instance_config(SN_INSTANCE *instance, char *path, char *file_name);
 
 #ifdef __cplusplus
 }

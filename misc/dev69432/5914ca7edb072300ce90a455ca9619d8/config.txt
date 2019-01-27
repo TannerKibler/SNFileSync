@@ -1,0 +1,5 @@
+sys_id:5914ca7edb072300ce90a455ca9619d8
+table:sys_data_source
+record:d7344e7edb072300ce90a455ca961999
+type:inbound
+file_name:*example_inbound_for_data%

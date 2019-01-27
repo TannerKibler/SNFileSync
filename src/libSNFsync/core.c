@@ -42,7 +42,7 @@ int backwards_find_index(char* str, char toFind) {
 		return -1;
 
 	int last = strlen(str)-1;
-	for (last; last >= 0; last--) {
+	for (; last >= 0; last--) {
 		if (str[last] == toFind)
 			return last;
 	}

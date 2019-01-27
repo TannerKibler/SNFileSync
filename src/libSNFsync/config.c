@@ -52,42 +52,111 @@ void push_all_files() {
 	 */
 }
 
-void generate_config_files(char* instance) {
-	if (instance == NULL)
+SN_INSTANCE* initialize_sn_instance() {
+	SN_INSTANCE *to_init = NULL;
+	to_init = malloc(sizeof(SN_INSTANCE));
+	if (to_init == NULL) {
+		//implement error library
+		return NULL;
+	}
+
+	to_init->username	= NULL;
+	to_init->password	= NULL;
+	to_init->host_name	= NULL;
+	to_init->next		= NULL;
+
+	return to_init;
+}
+
+void generate_config_files(char* instance, char *username, char *password) {
+	if (instance == NULL || username == NULL || password == NULL)
 		return;
 
-	SN_SOURCE_RECORD* tmp = NULL;
-	tmp = initialize_sn_source_record();
+	if (ensure_dir_exists(instance, "") == -1) {
+		//implement error library
+		return;
+	}
 
-	//if (FIRST_DATA_SOURCE == NULL) {
-	//FIRST_DATA_SOURCE = pull_sources_from_instance(instance);
-	//}
+	if (ensure_file_exists(instance, "config.txt") == -1) {
+		//implement error here
+		return;
+	}
+	
 	if (ensure_dir_exists("landing", "") == -1) {
 		// implement error here
 		return;
 	}
 
+	SN_INSTANCE *sn_instance = NULL;
+	sn_instance = initialize_sn_instance();
+	sn_instance->host_name = malloc(sizeof(char)*strlen(instance));
+	if (!sn_instance->host_name) {
+		//implement error library
+		return;
+	}
+	sn_instance->host_name = instance;
+
+	sn_instance->username = malloc(sizeof(char)*strlen(username));
+	if (!sn_instance->username) {
+		//implement error library
+		return;
+	}
+	sn_instance->username = username;
+
+	sn_instance->password = malloc(sizeof(char)*strlen(password));
+	if (!sn_instance->password) {
+		//implement error library
+		return;
+	}
+	sn_instance->password = password;
+
+	generate_file_for_instance_config(sn_instance, sn_instance->host_name, "config.txt");
+
+	SN_SOURCE_RECORD* tmp = NULL;
+	tmp = initialize_sn_source_record();
+
+	char *instance_dir = NULL;
+	instance_dir = malloc(8);
+	if (!instance_dir) {
+		//implement error library
+		return;
+	}	
+
 	tmp = pull_sources_from_instance(instance);
 	while(tmp) {
+
 		printf("\n-----------\nSys ID: %s", tmp->sys_id);
 		printf("\nTable: %s", tmp->table);
 		printf("\nRecord: %s", tmp->record);
 		printf("\nFile Name: %s", tmp->file_name);
 		printf("\nType: %s", tmp->type);
-		printf("\nSubType: %s\n---------------", tmp->subtype);
-		if (ensure_dir_exists(tmp->sys_id, "") == -1) {
+		printf("\nSubType: %s\n---------------\n", tmp->subtype);
+		instance_dir = realloc(instance_dir, (strlen(instance)*sizeof(char)) + 33);
+		if (!instance_dir) {
+			//implement error library
+			return;
+		}
+		instance_dir = instance;
+#ifdef WINDOWS
+		strcat(instance_dir, "\\");
+#else
+		strcat(instance_dir, "/");
+#endif
+		strcat(instance_dir, tmp->sys_id);
+		if (ensure_dir_exists(instance_dir, "") == -1) {
 			// implement error here
 			break;
 		}
-		if (ensure_dir_exists(tmp->sys_id, "success") == -1) {
+		if (ensure_dir_exists(instance_dir, "success") == -1) {
 			// implement error here
 			break;
 		}
-		if (ensure_file_exists(tmp->sys_id, "config.txt") == -1) {
+		if (ensure_file_exists(instance_dir, "config.txt") == -1) {
 			//implement error here
 			break;
 		}
 
+		generate_config_file_from_source_record(tmp, instance_dir, "config.txt\0");
 		tmp = tmp->next;
 	}
 }
@@ -120,272 +189,94 @@ SN_SOURCE_RECORD* initialize_sn_source_record() {
 	return source_record;
 }
 
-void parse_returned_sn_source_records(char* sources) {
+SN_SOURCE_RECORD* parse_returned_sn_source_records(char* sources) {
 	printf("Got from instance: %s\n", sources);
 
 	JSON_OBJECT *looper = NULL;
+	SN_SOURCE_RECORD *first = NULL, *current = NULL;
+	int key_result = -1;
 
 	JSON_OBJECT *test = parse_json_from_string(sources);
 	if (test) {
 		printf("\nFirst JSON Level Name: %s\n", test->name);
 		printf("\nFirst JSON level Value: %s\n", (char *)test->data);
-		
-		if (test->children) {
-			looper = initialize_json_object();
-			looper = test->children;
-			while(looper) {
-				printf("\nHad Child JSON Name: %s\n", looper->name);
-				printf("\nHad Child JSON Value: %s\n", (char *)looper->data);
-				looper = looper->next;
-			}
-		}
-	}
-
-	return;
-
-	char *current_read_string = NULL, *current_key = NULL, *value = NULL, *tmp = NULL;
-	int reading = 0, key_hit = -1;
-	SN_SOURCE_RECORD *first = NULL, *current_sn_source_record = NULL, *placeholder = NULL;
-	current_read_string = malloc(8);
-	value = malloc(8);
-	register int index = 0;
-	register int x = 0;
-	if (sources == NULL) {
-		return;
-	}
-
-	while(sources[index] != '\0') {
-		tmp = realloc(current_read_string, (index+1)*8);
-		if (tmp == NULL) {
-			//implement error check here
-			return;
-		}
-		current_read_string = tmp;
-		current_read_string[index] = sources[index];
-		key_hit = -1;
-		if (reading == 0) {
-			key_hit = seek_keys(substring(sources, index-13, index));
-			if (key_hit >= 0)
-				reading = 1;
-		}
-
-		if (reading == 1) {
-			if (key_hit >= 0) {
-				if (placeholder == NULL)
-					placeholder = initialize_sn_source_record();
-
-				if (key_hit == 0) {
-					x = 0;
-					value = NULL;
-					index = index-4;
-					while(sources[index] != '\0' && x < 32) {
-						tmp = realloc(value, (sizeof(char)*index) + 4);
-						if (tmp == NULL) {
-							//implement error check here
-							return;
-						}
-
-						value = tmp;
-						value[x] = sources[index];
-						printf("\n%s", value);
-						x++;
-						index++;
-					}
-					if (value != NULL)
-						set_sys_sn_source_record(&placeholder, value);
-
-					reading = 0;
-				}
-				else if (key_hit == 1) {
-					if (strncmp(substring(sources, index-3, index-1), KEY_VALUE_SEPERATOR, 3) == 0) {
-						x = 0;
-						value = NULL;
-						while(sources[index] != '\0'){
-							//if (sources[index] == '\"' || sources[index] == '\\' || sources[index] == ':') {
-							//	index++;
-							//	continue;
-							//}
-							tmp = realloc(value, (sizeof(char)*index) + 4);
-							if (tmp == NULL) {
-								//implement error check here
-								return;
-							}
-
-							value = tmp;
-							value[x] = sources[index];
-							printf("\n%s", value);
-							x++;
-							index++;
-							if ((strncmp(substring(sources, index, index+3), "\",\"", 3) == 0) ||
-									(strncmp(substring(sources, index, index+2), "\"}", 2) == 0)) {
-
-								if (value != NULL) 
-									set_name_sn_source_record(&placeholder, value);
-
-								reading = 0;
-								break;
-							}
-						}
-					}
-				}
-				else if (key_hit == 2) {
-					if (strncmp(substring(sources, index-3, index-1), KEY_VALUE_SEPERATOR, 3) == 0) {
-						x = 0;
-						value = NULL;
-						while(sources[index] != '\0'){
-							//if (sources[index] == '\"' || sources[index] == '\\' || sources[index] == ':') {
-							//	index++;
-							//	continue;
-							//}
-							tmp = realloc(value, (sizeof(char)*index) + 4);
-							if (tmp == NULL) {
-								//implement error check here
-								return;
-							}
-
-							value = tmp;
-							value[x] = sources[index];
-							printf("\n%s", value);
-							x++;
-							index++;
-							if ((strncmp(substring(sources, index, index+3), "\",\"", 3) == 0) ||
-									(strncmp(substring(sources, index, index+2), "\"}", 2) == 0)) {
-
-								if (value != NULL)
-									set_table_sn_source_record(&placeholder, value);
-
-								reading = 0;
-								break;
-							}
-						}
-					}
-				}
-				else if (key_hit == 3) {
-					if (strncmp(substring(sources, index-3, index-1), KEY_VALUE_SEPERATOR, 3) == 0) {
-						x = 0;
-						value = NULL;
-						while(sources[index] != '\0'){
-							//if (sources[index] == '\"' || sources[index] == '\\' || sources[index] == ':') {
-							//	index++;
-							//	continue;
-							//}
-							tmp = realloc(value, (sizeof(char)*index) + 4);
-							if (tmp == NULL) {
-								//implement error check here
-								return;
-							}
-
-							value = tmp;
-							value[x] = sources[index];
-							printf("\n%s", value);
-							x++;
-							index++;
-							if ((strncmp(substring(sources, index, index+3), "\",\"", 3) == 0) ||
-									(strncmp(substring(sources, index, index+2), "\"}", 2) == 0)) {
-
-								if (value != NULL)
-									set_record_sn_source_record(&placeholder, value);
-
-								reading = 0;
-								break;
-							}
-						}
-					}
-				}
-				else if (key_hit == 4) {
-					if (strncmp(substring(sources, index-3, index-1), KEY_VALUE_SEPERATOR, 3) == 0) {
-						x = 0;
-						value = NULL;
-						while(sources[index] != '\0'){
-							//if (sources[index] == '\"' || sources[index] == '\\' || sources[index] == ':') {
-							//	index++;
-							//	continue;
-							//}
-							tmp = realloc(value, (sizeof(char)*index) + 4);
-							if (tmp == NULL) {
-								//implement error check here
-								return;
-							}
-
-							value = tmp;
-							value[x] = sources[index];
-							printf("\n%s", value);
-							x++;
-							index++;
-							if ((strncmp(substring(sources, index, index+3), "\",\"", 3) == 0) ||
-									(strncmp(substring(sources, index, index+2), "\"}", 2) == 0)) {
-
-								if (value != NULL)
-									set_type_sn_source_record(&placeholder, value);
-
-								reading = 0;
-								break;
-							}
-						}
-					}
-				}
-				else if (key_hit == 5) {
-					if (strncmp(substring(sources, index-3, index-1), KEY_VALUE_SEPERATOR, 3) == 0) {
-						x = 0;
-						value = NULL;
-						while(sources[index] != '\0'){
-							//if (sources[index] == '\"' || sources[index] == '\\' || sources[index] == ':') {
-							//	index++;
-							//	continue;
-							//}
-							tmp = realloc(value, (sizeof(char)*index) + 4);
-							if (tmp == NULL) {
-								//implement error check here
-								return;
-							}
-
-							value = tmp;
-							value[x] = sources[index];
-							printf("\n%s", value);
-							x++;
-							index++;
-							if ((strncmp(substring(sources, index, index+3), "\",\"", 3) == 0) ||
-									(strncmp(substring(sources, index, index+2), "\"}", 2) == 0)) {
-
-								if (value != NULL)
-									set_subtype_sn_source_record(&placeholder, value);
-
-								reading = 0;
-								break;
-							}
-						}
-					}
-				}
-
-				if (placeholder != NULL && placeholder->sys_id != NULL && placeholder->file_name != NULL) {
-					if (first == NULL) {
+		printf("\nStrlen of name: %li\n", strlen(test->name));
+		if (strncmp(test->name, "result\0", 6) == 0) {
+			printf("\nReading children of result\n");
+			if (test->children) {
+				looper = initialize_json_object();
+				looper = test->children;
+				while(looper) {
+					printf("\nHad Child JSON Name: %s\n", looper->name);
+					printf("\nHad Child JSON Value: %s\n", (char *)looper->data);
+					if (!first) {
 						first = initialize_sn_source_record();
-						first = placeholder;
-						placeholder = NULL;
-						free(placeholder);
-						current_sn_source_record = initialize_sn_source_record();
-						current_sn_source_record = first;
-						reading = 0;
+						if (!first) {
+							//implement error library
+							return NULL;
+						}
 					}
-					else {
-						current_sn_source_record->next = initialize_sn_source_record();
-						current_sn_source_record->next = placeholder;
-						placeholder = NULL;
-						free(placeholder);
-						current_sn_source_record = current_sn_source_record->next;
-						reading = 0;
+
+					current = first;
+
+					key_result = seek_keys(looper->name);
+					switch(key_result) {
+						case 0:
+							set_sys_sn_source_record(&current, (char *)looper->data);
+							break;
+						case 1:
+							set_name_sn_source_record(&current, (char *)looper->data);
+							break;
+						case 2:
+							set_table_sn_source_record(&current, (char *)looper->data);
+							break;
+						case 3:
+							set_record_sn_source_record(&current, (char *)looper->data);
+							break;
+						case 4:
+							set_type_sn_source_record(&current, (char *)looper->data);
+							break;
+						case 5:
+							set_subtype_sn_source_record(&current, (char *)looper->data);
+							break;
 					}
+					if (is_sn_source_record_complete(current)) {
+						current->next = initialize_sn_source_record();
+						current = current->next;
+						current->next = NULL;
+					}
+					looper = looper->next;
 				}
 			}
 		}
-		index++;
 	}
-	if (first) {
-		first_sn_source_record_in_list = initialize_sn_source_record();
-		first_sn_source_record_in_list = first;
-	}
+	first_sn_source_record_in_list = first;
+	return first_sn_source_record_in_list;
+}
 
-	return;
+int is_sn_source_record_complete(SN_SOURCE_RECORD *to_test) {
+	if (!to_test)
+		return 0;
+	
+	if (to_test->sys_id == NULL)
+		return 0;
+	
+	if (to_test->file_name == NULL)
+		return 0;
+
+	if (to_test->table == NULL)
+		return 0;
+
+	if (to_test->record == NULL)
+		return 0;
+
+	if (to_test->type == NULL)
+		return 0;
+
+	if (to_test->subtype == NULL)
+		return 0;
+
+	return 1;
 }
 
 void set_sys_sn_source_record(SN_SOURCE_RECORD **sn_source_record, char *sys) {
