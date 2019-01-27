@@ -18,7 +18,7 @@ void set_string_value(char* strSource, char** strDest) {
 char* substring(char *str, int stIndex, int enIndex) {
 	char *retString = NULL;
 	int loopIn = 0;
-	
+
 	if (enIndex < stIndex)
 		return NULL;
 
@@ -46,6 +46,25 @@ int backwards_find_index(char* str, char toFind) {
 		if (str[last] == toFind)
 			return last;
 	}
+
+	return -1;
+}
+
+int find_index_of_next_occurence(char to_find, int start_index, char *search_string) {
+	if (!to_find || search_string == NULL || !search_string[start_index] || search_string[start_index] == '\0') {
+		// implement error library
+		return -1;
+	}
+	printf("\n\nStarting on: %i", start_index);
+
+	do {
+		start_index++;
+		if (search_string[start_index] == to_find) {
+			printf("\nEnding on: %i\n", start_index);
+			return start_index;
+		}
+	}
+	while(search_string[start_index+1] != '\0');
 
 	return -1;
 }

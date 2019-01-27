@@ -31,11 +31,11 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, voi
   return realsize;
 }
 
-void load_data_sources(char* instance) {
+void load_sn_source_records(char* instance) {
 	CURL *curl;
 	CURLcode res;
 	char prefix[9] = "https://\0";
-	char suffix[67] = ".service-now.com/api/236565/mid_server_file_share/get_data_sources\0";
+	char suffix[77] = ".service-now.com/api/x_236565_file_sync/file_sync_inbound/get_configurations\0";
 	char *url = NULL, *orig = NULL;
 	url = malloc(sizeof(char)*400);
 	//orig = url; //storing pointer to beginning of url before concatting. This is so I can free it later.
@@ -88,7 +88,7 @@ void load_data_sources(char* instance) {
 
 			printf("%lu bytes retrieved\n", (unsigned long)chunk.size);
 			//printf("Received %s\n", chunk.memory);
-			parse_returned_data_sources((char *)chunk.memory);
+			parse_returned_sn_source_records((char *)chunk.memory);
 		}
 
 		/* always cleanup */

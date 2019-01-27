@@ -16,9 +16,13 @@ extern "C" {
 	#define MAX_PATH 150
 #endif
 
+#define likely(x)       __builtin_expect((x),1)
+#define unlikely(x)     __builtin_expect((x),0)
+
 void set_string_value(char* strSource, char** strDest);
 char* substring(char* str, int stIndex, int enIndex);
 int backwards_find_index(char* str, char toFind);
+int find_index_of_next_occurence(char next_char, int start_index, char *search_string);
 
 #ifdef __cplusplus
 }

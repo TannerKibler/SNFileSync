@@ -9,7 +9,7 @@ extern "C" {
 #include "curl/curl.h"
 #include "config.h"
 
-void load_data_sources(char* instance);
+void load_sn_source_records(char* instance);
 
 #ifdef __cplusplus
 }

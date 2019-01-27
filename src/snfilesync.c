@@ -5,7 +5,7 @@
 
 int main (int argc, char **argv){
 	char *instance = NULL;
-	char tmp;
+	//char tmp;
 	int opt;
 	printf("Starting!\n");
 	printf("Arguments: %i\n", argc);

@@ -8,10 +8,10 @@ struct stat st = {0};
 
 
 char* get_current_directory() {
-	int toTrim = 0;
 	char* tmp = NULL;
 	tmp = malloc(MAX_PATH);
 #ifdef WINDOWS
+	int toTrim = 0;
 	GetModuleFileName( NULL, buffer, MAX_PATH );
 	strcpy(tmp, buffer);
 	toTrim = backwards_find_index(tmp, '\\'); 
