@@ -1,3 +1,0 @@
-username:admin
-password:kibbles42
-instance::dev69432
