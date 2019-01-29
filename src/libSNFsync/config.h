@@ -9,6 +9,7 @@ extern "C" {
 #include "sn_instance.h"
 #include "file.h"
 #include "json.h"
+#include "core.h"
 
 #define KEY_VALUE_SEPERATOR "\":\""
 #define KEY_SEPERATOR ","
@@ -45,7 +46,7 @@ typedef struct PUSH_CONFIG PUSH_CONFIG;
 void push_all_files();
 
 void generate_config_files(char *instance, char *username, char *password);
-SN_SOURCE_RECORD* pull_sources_from_instance();
+SN_SOURCE_RECORD* pull_sources_from_instance(SN_INSTANCE *instance);
 void set_sys_sn_source_record(SN_SOURCE_RECORD **ds, char *sys);
 void set_name_sn_source_record(SN_SOURCE_RECORD **ds, char *name);
 void set_table_sn_source_record(SN_SOURCE_RECORD **sn_source, char *table);
@@ -65,6 +66,7 @@ SN_SOURCE_RECORD* parse_returned_sn_source_records(char *sources);
 int is_sn_source_record_complete(SN_SOURCE_RECORD *to_test);
 
 int seek_keys(char *str);
+void free_source_list(SN_SOURCE_RECORD *head);
 
 #ifdef __cplusplus
 }

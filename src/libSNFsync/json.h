@@ -25,6 +25,7 @@ JSON_OBJECT* initialize_json_object();
 void set_name_json_object(JSON_OBJECT **json_object, char *name);
 void set_data_json_object(JSON_OBJECT **json_object, char *name);
 void insert_into_json_list(JSON_OBJECT *json_object, char *name, char *data);
+void free_json_list(JSON_OBJECT *head);
 
 #ifdef __cplusplus
 }

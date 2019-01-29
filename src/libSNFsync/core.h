@@ -8,6 +8,11 @@ extern "C" {
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
+#include <sys/inotify.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include "file.h"
 
 #ifdef CUSTOM_PATH_CAP
 	#define MAX_PATH CUSTOM_PATH_CAP
@@ -18,11 +23,17 @@ extern "C" {
 
 #define likely(x)       __builtin_expect((x),1)
 #define unlikely(x)     __builtin_expect((x),0)
+#define INOTIFY_EVENT_SIZE (sizeof(struct inotify_event))
+#define INOTIFY_BUFFER_LENGTH (1024 * (INOTIFY_EVENT_SIZE + 16))
 
 void set_string_value(char* strSource, char** strDest);
 char* substring(char* str, int stIndex, int enIndex);
 int backwards_find_index(char* str, char toFind);
 int find_index_of_next_occurence(char next_char, int start_index, char *search_string);
+void start_watching_landing_directory_for_instance();
+void* poll_changes_to_landing_directory(void *thread_data);
+int watch_for_file_system_changes();
+int create_daemon();
 
 #ifdef __cplusplus
 }

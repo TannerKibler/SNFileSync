@@ -31,20 +31,19 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, voi
   return realsize;
 }
 
-void load_sn_source_records(char* instance) {
+void load_sn_source_records(SN_INSTANCE *instance) {
 	CURL *curl;
 	CURLcode res;
 	char prefix[9] = "https://\0";
 	char suffix[77] = ".service-now.com/api/x_236565_file_sync/file_sync_inbound/get_configurations\0";
 	char *url = NULL, *orig = NULL;
 	url = malloc(sizeof(char)*400);
-	//orig = url; //storing pointer to beginning of url before concatting. This is so I can free it later.
 
 	strncpy(url, prefix, 9);
-	strcat(url, instance);
+	strcat(url, instance->host_name);
 	strcat(url, suffix);
 
-	printf("Calling url: %s\n", url);
+	printf("\n\nCalling URL: %s\n\n", url);
 
 	struct MemoryStruct chunk;
 
@@ -63,8 +62,8 @@ void load_sn_source_records(char* instance) {
 		curl_easy_setopt(curl, CURLOPT_URL, url);
 
 		/* Now specify the POST data */
-		curl_easy_setopt(curl, CURLOPT_USERNAME, "admin");
-		curl_easy_setopt(curl, CURLOPT_PASSWORD, "Kibbles42");
+		curl_easy_setopt(curl, CURLOPT_USERNAME, instance->username);
+		curl_easy_setopt(curl, CURLOPT_PASSWORD, instance->password);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
 		/* we pass our 'chunk' struct to the callback function */ 
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
@@ -76,20 +75,9 @@ void load_sn_source_records(char* instance) {
 			fprintf(stderr, "curl_easy_perform() failed: %s\n",
 					curl_easy_strerror(res));
 		}
-		else {
-			/*
-			 * Now, our chunk.memory points to a memory block that is chunk.size
-			 * bytes big and contains the remote file.
-			 *
-			 * Do something nice with it!
-			 */ 
-
-
-
-			printf("%lu bytes retrieved\n", (unsigned long)chunk.size);
-			//printf("Received %s\n", chunk.memory);
+		else 
 			parse_returned_sn_source_records((char *)chunk.memory);
-		}
+		
 
 		/* always cleanup */
 		curl_easy_cleanup(curl);
@@ -97,5 +85,5 @@ void load_sn_source_records(char* instance) {
 	curl_global_cleanup();
 	free(chunk.memory);
 	free(orig);
-	//return 0;
+	free(url);
 }

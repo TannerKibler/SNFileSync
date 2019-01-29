@@ -9,7 +9,9 @@ extern "C" {
 #include "curl/curl.h"
 #include "config.h"
 
-void load_sn_source_records(char* instance);
+typedef struct SN_INSTANCE SN_INSTANCE;
+
+void load_sn_source_records(SN_INSTANCE *instance);
 
 #ifdef __cplusplus
 }
