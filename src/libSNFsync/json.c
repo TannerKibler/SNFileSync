@@ -46,20 +46,11 @@ JSON_OBJECT* parse_json_from_string(char *json_string) {
 				next_index = find_index_of_next_occurence('\"', i, json_string);
 				if (next_index > -1) {
 					next_index--;
-					//if (value == NULL) {
-					//	value = malloc(sizeof(char)*(next_index-i));
-					//	if (!value) {
-					//		// implement error library
-					//		return NULL;
-					//	}
-					//}
-					//else {
-						tmp = realloc(value, sizeof(char)*(next_index-i));
-						if (!tmp) {
-							// implement error library
-							return NULL;
-						}
-					//}
+					tmp = realloc(value, sizeof(char)*(next_index-i));
+					if (!tmp) {
+						// implement error library
+						return NULL;
+					}
 					value = tmp;
 					value = substring(json_string, i, next_index);
 					reading_value = 0;
@@ -67,6 +58,8 @@ JSON_OBJECT* parse_json_from_string(char *json_string) {
 					set_data_json_object(&placeholder, value);
 					i = next_index + 2;
 					value = NULL;
+					free(value);
+					free(tmp);
 				}
 			}
 		}
@@ -76,20 +69,11 @@ JSON_OBJECT* parse_json_from_string(char *json_string) {
 				next_index = find_index_of_next_occurence('\"', i, json_string);
 				if (next_index > -1) {
 					next_index--;
-					//if (!key) {
-					//	key = malloc(sizeof(char)*(next_index-i));
-					//	if (!key) {
-					//		// implement error library
-					//		return NULL;
-					//	}
-					//}
-					//else {
-						tmp = realloc(key, sizeof(char)*(next_index-i));
-						if (!tmp) {
-							// implement error library
-							return NULL;
-						}
-					//}
+					tmp = realloc(key, sizeof(char)*(next_index-i));
+					if (!tmp) {
+						// implement error library
+						return NULL;
+					}
 					key = tmp;
 					key = substring(json_string, i, next_index);
 					reading_value = 1;
@@ -97,6 +81,8 @@ JSON_OBJECT* parse_json_from_string(char *json_string) {
 					set_name_json_object(&placeholder, key);
 					i = next_index + 2;
 					key = NULL;
+					free(key);
+					free(tmp);
 				}
 			}
 		}
@@ -146,9 +132,9 @@ JSON_OBJECT* parse_json_from_string(char *json_string) {
 
 	free(placeholder);
 	//free(current_parent);
-	free(value);
-	free(key);
-	free(tmp);
+	//	free(value);
+	//	free(key);
+	//	free(tmp);
 	return first;
 }
 
@@ -190,28 +176,28 @@ void insert_into_json_list(JSON_OBJECT *parent, char *name, char *data) {
 }
 
 void set_name_json_object(JSON_OBJECT **json_object, char *name) {
-//	(*json_object)->name = malloc(sizeof(char) * strlen(name) + 4);
-//	if ((*json_object)->name == NULL) {
-//		// Implement Error functionality
-//		return;
-//	}
+	//	(*json_object)->name = malloc(sizeof(char) * strlen(name) + 4);
+	//	if ((*json_object)->name == NULL) {
+	//		// Implement Error functionality
+	//		return;
+	//	}
 
 	(*json_object)->name = name;
 }
 
 void set_data_json_object(JSON_OBJECT **json_object, char *data) {
-//	(*json_object)->data = malloc(sizeof(char) * strlen(data) + 4);
-//	if ((*json_object)->data == NULL) {
-//		// Implement Error functionality
-//		return;
-//	}
+	//	(*json_object)->data = malloc(sizeof(char) * strlen(data) + 4);
+	//	if ((*json_object)->data == NULL) {
+	//		// Implement Error functionality
+	//		return;
+	//	}
 
 	(*json_object)->data = data;
 }
 
 void free_json_list(JSON_OBJECT *head) {
 	JSON_OBJECT *swap = NULL;
-	
+
 	while(head != NULL) {
 		free_json_list(head->children);
 		swap = head;

@@ -67,6 +67,12 @@ int is_sn_source_record_complete(SN_SOURCE_RECORD *to_test);
 
 int seek_keys(char *str);
 void free_source_list(SN_SOURCE_RECORD *head);
+void load_sn_instance_from_child_config_file(SN_INSTANCE **to_load, char *instance);
+void load_sn_source_record_from_child_config(SN_SOURCE_RECORD **to_load, char *instance_dir_name);
+int check_for_child_config_file(char *instance, char *prepend);
+SN_INSTANCE* load_instances_from_files();
+SN_SOURCE_RECORD* load_sources_from_sn_instance();
+SN_SOURCE_RECORD* get_first_sn_source_record();
 
 #ifdef __cplusplus
 }

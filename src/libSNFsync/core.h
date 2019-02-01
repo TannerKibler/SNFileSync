@@ -26,14 +26,21 @@ extern "C" {
 #define INOTIFY_EVENT_SIZE (sizeof(struct inotify_event))
 #define INOTIFY_BUFFER_LENGTH (1024 * (INOTIFY_EVENT_SIZE + 16))
 
+typedef struct SN_SOURCE_RECORD SN_SOURCE_RECORD;
+
 void set_string_value(char* strSource, char** strDest);
 char* substring(char* str, int stIndex, int enIndex);
 int backwards_find_index(char* str, char toFind);
 int find_index_of_next_occurence(char next_char, int start_index, char *search_string);
 void start_watching_landing_directory_for_instance();
 void* poll_changes_to_landing_directory(void *thread_data);
+void* loop_for_file_system_watch(void *thread_data);
 int watch_for_file_system_changes();
 int create_daemon();
+void process_new_files();
+int backwards_find_index_from_index(char *str, char toFind, int start);
+void handle_file_by_source_record_rules(char *file_name, SN_SOURCE_RECORD *sn_source_record);
+int check_file_name_for_match(char *file_name, SN_SOURCE_RECORD *sn_source_record);
 
 #ifdef __cplusplus
 }

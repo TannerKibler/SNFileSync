@@ -234,3 +234,92 @@ char* read_file_to_buffer(char* fileName) {
 
 	return buffer;
 }
+
+int validate_directory(char *directory) {
+
+	return 0;
+}
+
+char** read_files_in_directory(char *directory) {
+	DIR *d;
+    struct dirent *dir;
+	char **file_names = NULL;
+	int i = 0, loop_end = 9;
+	//char landing_directory[MAX_PATH];
+
+	//get_current_directory(landing_directory);
+
+	// Let's start with room for 10 files, can realloc if needed
+	file_names = malloc(10 * sizeof(char*));
+	if (!file_names) {
+		//implement error library
+		return NULL;
+	}
+    
+	//d = opendir(landing_directory);
+	d = opendir(directory);
+    if (d) {
+        while ((dir = readdir(d)) != NULL) {
+			if (i > loop_end) {
+				file_names = realloc(file_names, (i*2) * sizeof(char*));
+				if (!file_names) {
+					//implement error library
+					return NULL;
+				}
+				loop_end += 10;
+			}
+			file_names[i] = malloc(strlen(dir->d_name)*sizeof(char)+4);
+			strcpy(file_names[i], dir->d_name);
+			i++;
+        }
+        closedir(d);
+		return file_names;
+	}
+	else 
+		return NULL;
+
+}
+
+char** read_files_in_landing_directory() {
+	DIR *d;
+    struct dirent *dir;
+	char **file_names = NULL;
+	int i = 0, loop_end = 9;
+	char landing_directory[MAX_PATH];
+
+	get_current_directory(landing_directory);
+	strcat(landing_directory, "/");
+	strcat(landing_directory, "landing");
+
+	// Let's start with room for 10 files, can realloc if needed
+	file_names = malloc(10 * sizeof(char*));
+	if (!file_names) {
+		//implement error library
+		printf("\nFailed to malloc file_names in file.c:read_files_in_landing_directory\n");
+		return NULL;
+	}
+    
+	d = opendir(landing_directory);
+    if (d) {
+        while ((dir = readdir(d)) != NULL) {
+			if (i > loop_end) {
+				file_names = realloc(file_names, (i*2) * sizeof(char*));
+				if (!file_names) {
+					//implement error library
+					printf("\nFailed to realloc file_names in file.c:read_files_in_landing_directory\n");
+					return NULL;
+				}
+				loop_end += 10;
+			}
+			if (dir->d_name) {
+				file_names[i] = malloc(strlen(dir->d_name)*sizeof(char)+4);
+				strcpy(file_names[i], dir->d_name);
+			}
+			i++;
+        }
+        closedir(d);
+		return file_names;
+	}
+	else 
+		return NULL;
+}
