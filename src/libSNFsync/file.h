@@ -14,6 +14,7 @@ extern "C" {
 	#include <unistd.h>
 	#include <dirent.h>
 	#include <errno.h>
+	#include <fcntl.h>
 #endif
 
 #include <stdio.h>
@@ -30,8 +31,9 @@ char* read_file_to_buffer(char* fileName);
 void generate_config_file_from_source_record(SN_SOURCE_RECORD *to_store, char *path, char *file_name);
 void generate_file_for_instance_config(SN_INSTANCE *instance, char *path, char *file_name);
 int validate_directory(char *directory);
-char** read_files_in_landing_directory();
+int read_files_in_landing_directory(char **files);
 char** read_files_in_directory(char *directory);
+int copy_file(const char *to, const char *from);
 
 #ifdef __cplusplus
 }

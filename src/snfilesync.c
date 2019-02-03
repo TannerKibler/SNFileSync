@@ -6,7 +6,7 @@
 int main (int argc, char **argv){
 	char *instance = NULL, *pass = NULL, *username = NULL;
 	int opt;
-	while ((opt = getopt(argc, argv, "glwi:u:")) != -1) {
+	while ((opt = getopt(argc, argv, "glwpi:u:")) != -1) {
 		switch (opt) {
 			case 'i':
 				set_string_value(optarg, &instance);
@@ -47,6 +47,10 @@ int main (int argc, char **argv){
 				load_instances_from_files();
 				load_sources_from_sn_instance();
 				break;
+			case 'p':
+				load_instances_from_files();
+				load_sources_from_sn_instance();
+				call_send_to_instance();
 		}
 
 		free(pass);

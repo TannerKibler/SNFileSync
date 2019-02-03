@@ -20,7 +20,7 @@ struct JSON_OBJECT {
 typedef struct JSON_OBJECT JSON_OBJECT;
 
 JSON_OBJECT* parse_json_from_string(char *str);
-JSON_OBJECT* initialize_json_object();
+void initialize_json_object(JSON_OBJECT **to_init);
 
 void set_name_json_object(JSON_OBJECT **json_object, char *name);
 void set_data_json_object(JSON_OBJECT **json_object, char *name);

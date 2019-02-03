@@ -82,9 +82,9 @@ int find_index_of_next_occurence(char to_find, int start_index, char *search_str
 
 void* poll_changes_to_landing_directory(void *thread_data) {
 	while (1) {
-		sleep(5);
+		sleep(120);
 		process_new_files();
-		printf("\nStayed live for another loop.\n");
+		//printf("\nStayed live for another loop.\n");
 	}
 	return NULL;
 }
@@ -95,41 +95,42 @@ void start_watching_landing_directory_for_instance() {
 	int daemon_success = 0;
 
 	daemon_success = create_daemon();
-	if (daemon_success != 0) {
+	if (daemon_success == -1) {
 		//implement error library
 		return;
 	}
 
 	process_new_files();
 
-	//err = pthread_create(&(tid[0]), NULL, &poll_changes_to_landing_directory, NULL);
-	//if (err != 0) {
-	//	//implement error library
-	//	return;
-	//}
+	if (daemon_success == 0) {
+		err = pthread_create(&(tid[0]), NULL, &poll_changes_to_landing_directory, NULL);
+		if (err != 0) {
+			//implement error library
+			printf("\nError exiting thread\n");
+			return;
+		}
 
-	while(1) {
-		if (watch_for_file_system_changes() == 0) {
+		//watch_for_file_system_changes();
+
+		for (;;) {
+			watch_for_file_system_changes();
 			process_new_files();
 		}
 	}
-	
-}
 
-void* loop_for_file_system_watch(void *thread_data) {
-	while(1) {
-		if (watch_for_file_system_changes() == 0) {
-			printf("\nDetected file change\n");
-			process_new_files();
-		}
-	}
 }
 
 void process_new_files() {
-	char** files = read_files_in_landing_directory();
+	char** files = NULL;
 	SN_SOURCE_RECORD *first_in_list = NULL, *looper = NULL;
 	register int i = 0;
-	int file_name_match = 0;
+	int file_name_match = 0, files_returned = 0;
+
+	files = malloc(10*sizeof(char*));
+	files_returned = read_files_in_landing_directory(files);
+
+	if (files_returned <= 0)
+		return;
 
 	first_in_list = get_first_sn_source_record();
 	looper = first_in_list;
@@ -139,12 +140,9 @@ void process_new_files() {
 		return;
 	}
 
-	while(files[i]) {
-		if (!files[i] || (strncmp(files[i], ".", 1) == 0) || (strncmp(files[i], "..", 2) == 0)) {
-			i++;
+	for (; i < files_returned; i++) {
+		if (!files[i] || strncmp(files[i], ".", 1) == 0 || strncmp(files[i], "..", 2) == 0)
 			continue;
-		}
-		printf("\nProcessing file: %s\n", files[i]);
 
 		while(looper) {
 			file_name_match = check_file_name_for_match(files[i], looper);
@@ -157,12 +155,46 @@ void process_new_files() {
 		}
 
 		looper = first_in_list;
-		i++;
+		free(files[i]);
 	}
+	free(files);
 }
 
 void handle_file_by_source_record_rules(char *file_name, SN_SOURCE_RECORD *sn_source_record) {
-	printf("\nWow, can't believe that worked\n");
+	char to_buffer[MAX_PATH], from_buffer[MAX_PATH];
+	int success = 0;
+
+
+	get_current_directory(from_buffer);
+	strcpy(to_buffer, from_buffer);
+
+	strcat(to_buffer, "/");
+	strcat(to_buffer, sn_source_record->instance->host_name);
+	strcat(to_buffer, "/");
+	strcat(to_buffer, sn_source_record->sys_id);
+	strcat(to_buffer, "/");
+	strcat(to_buffer, file_name);
+
+	strcat(from_buffer, "/landing/");
+	strcat(from_buffer, file_name);
+
+	printf("\n----------\nCopying file from %s\n----------\n", from_buffer);
+	printf("\n----------\nCopying file to %s\n----------\n", to_buffer);
+
+	copy_file(to_buffer, from_buffer);
+	success = ensure_file_exists(to_buffer, NULL, NULL);
+	printf("\n\n File exists?: %d", success);
+	if (success == -1) {
+		//implement error library
+		return;
+	}
+	else {
+		if (remove(from_buffer) != 0) {
+			// implement error library
+			return;
+		}
+		post_attachment_to_servicenow(to_buffer, sn_source_record, file_name);
+	}
 }
 
 int check_file_name_for_match(char *file_name, SN_SOURCE_RECORD *sn_source_record) {
@@ -346,7 +378,7 @@ int check_file_name_for_match(char *file_name, SN_SOURCE_RECORD *sn_source_recor
 	return return_value;
 }
 
-int watch_for_file_system_changes() {
+void watch_for_file_system_changes() {
 	static int inotify_init_ret = 0, inotify_read = 0, i = 0, set_return_value = -1;
 	static char buffer[INOTIFY_BUFFER_LENGTH], file_buffer[MAX_PATH];
 	struct inotify_event *event = NULL;
@@ -355,7 +387,7 @@ int watch_for_file_system_changes() {
 	if (inotify_init_ret < 0) {
 		//implement error library
 		printf("\nFailed to init inotify\n");
-		return -1;
+		return;
 	}
 
 	get_current_directory(file_buffer);
@@ -363,30 +395,30 @@ int watch_for_file_system_changes() {
 	if (ensure_dir_exists(file_buffer, "landing", NULL) == -1) {
 		//implement error library
 		printf("\nFailed to create / find landing directory\n");
-		return -1;
+		return;
 	}
 
-	inotify_add_watch(inotify_init_ret, file_buffer, IN_CREATE | IN_MODIFY);
-	inotify_read = read(inotify_init_ret, buffer, INOTIFY_BUFFER_LENGTH);
-	if (inotify_read < 0) {
-		// implement error library
-		printf("\nInotify Read returned failure\n");
-		return -1;
-	}
+	strcat(file_buffer, "/landing");
+	printf("\nStarting watch for directory: %s\n", file_buffer);
 
-	while (i < inotify_read) {
-		event = (struct inotify_event *)&buffer[i];
-		if (event->len) {
-			if (event->mask & IN_MODIFY || event->mask & IN_CREATE) {
-				set_return_value = 0;
-				printf("\nHad FS event\n");
-				//break;
-			}
+	inotify_add_watch(inotify_init_ret, file_buffer, IN_CREATE | IN_MODIFY | IN_DELETE);
+		inotify_read = read(inotify_init_ret, buffer, INOTIFY_BUFFER_LENGTH);
+		if (inotify_read < 0) {
+			// implement error library
+			printf("\nInotify Read returned failure\n");
+			return;
 		}
-		i += INOTIFY_EVENT_SIZE + event->len;
-	}
 
-	return set_return_value;
+		while (i < inotify_read) {
+			event = (struct inotify_event *)&buffer[i];
+			if (event->len) {
+				if (event->mask & IN_MODIFY || event->mask & IN_CREATE) {
+					printf("\nHad File System change\n");
+					process_new_files();
+				}
+			}
+			i += INOTIFY_EVENT_SIZE + event->len;
+	}
 }
 
 int create_daemon() {
@@ -398,10 +430,10 @@ int create_daemon() {
 		return -1;
 	}
 
-	if (setsid() < 0) {
-		//implement error library
-		return -1;
-	}
+//	if (setsid() < 0) {
+//		//implement error library
+//		return -1;
+//	}
 
-	return 0;
+	return forked_pid;
 }

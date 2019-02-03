@@ -28,6 +28,8 @@ struct SN_SOURCE_RECORD {
 	char* record;
 	char* type;
 	char* subtype;
+	char* file_type;
+	struct SN_INSTANCE *instance;
 	struct SN_SOURCE_RECORD *next;
 };
 
@@ -53,8 +55,8 @@ void set_table_sn_source_record(SN_SOURCE_RECORD **sn_source, char *table);
 void set_type_sn_source_record(SN_SOURCE_RECORD **sn_source, char *type);
 void set_record_sn_source_record(SN_SOURCE_RECORD **sn_source, char *record);
 void set_subtype_sn_source_record(SN_SOURCE_RECORD **sn_source, char *subtype);
-SN_SOURCE_RECORD* initialize_sn_source_record();
-SN_INSTANCE* initialize_sn_instance();
+void initialize_sn_source_record(SN_SOURCE_RECORD **sn_source);
+void initialize_sn_instance(SN_INSTANCE **sn_instance);
 
 PUSH_CONFIG* initialize_push_config();
 void set_end_file_name(PUSH_CONFIG **push, char *name);
@@ -67,12 +69,15 @@ int is_sn_source_record_complete(SN_SOURCE_RECORD *to_test);
 
 int seek_keys(char *str);
 void free_source_list(SN_SOURCE_RECORD *head);
+void free_instance_list(SN_INSTANCE *head);
 void load_sn_instance_from_child_config_file(SN_INSTANCE **to_load, char *instance);
 void load_sn_source_record_from_child_config(SN_SOURCE_RECORD **to_load, char *instance_dir_name);
 int check_for_child_config_file(char *instance, char *prepend);
 SN_INSTANCE* load_instances_from_files();
 SN_SOURCE_RECORD* load_sources_from_sn_instance();
 SN_SOURCE_RECORD* get_first_sn_source_record();
+
+void call_send_to_instance();
 
 #ifdef __cplusplus
 }

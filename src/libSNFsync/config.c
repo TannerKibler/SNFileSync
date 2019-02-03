@@ -29,6 +29,8 @@ int seek_keys(char *str) {
 		key_hit = 4;
 	else if (strncmp(str, SUBTYPE, 7) == 0)
 		key_hit = 5;
+	else if (strncmp(str, "file_type", 9) == 0)
+		key_hit = 6;
 	else
 		return -1;
 
@@ -54,20 +56,20 @@ void push_all_files() {
 	 */
 }
 
-SN_INSTANCE* initialize_sn_instance() {
-	SN_INSTANCE *to_init = NULL;
-	to_init = malloc(sizeof(SN_INSTANCE));
-	if (to_init == NULL) {
-		//implement error library
-		return NULL;
-	}
+void initialize_sn_instance(SN_INSTANCE **to_init) {
+//	SN_INSTANCE *to_init = NULL;
+//	to_init = malloc(sizeof(SN_INSTANCE));
+//	if (to_init == NULL) {
+//		//implement error library
+//		return NULL;
+//	}
 
-	to_init->username	= NULL;
-	to_init->password	= NULL;
-	to_init->host_name	= NULL;
-	to_init->next		= NULL;
+	(*to_init)->username	= NULL;
+	(*to_init)->password	= NULL;
+	(*to_init)->host_name	= NULL;
+	(*to_init)->next		= NULL;
 
-	return to_init;
+	//return to_init;
 }
 
 void load_sn_instance_from_child_config_file(SN_INSTANCE **to_load, char *instance_dir_name) {
@@ -165,23 +167,68 @@ void load_sn_source_record_from_child_config(SN_SOURCE_RECORD **to_load, char *p
 			}
 			value = tmp;
 			value = substring(file_buffer, back_index+1, i);
-			if (strncmp(key, "sys_id", 6) == 0)
-				(*to_load)->sys_id = value;
-			else if (strncmp(key, "table", 5) == 0)
-				(*to_load)->table = value;
-			else if (strncmp(key, "record", 6) == 0)
-				(*to_load)->record = value;
-			else if (strncmp(key, "type", 4) == 0)
-				(*to_load)->type = value;
-			else if (strncmp(key, "subtype", 7) == 0)
-				(*to_load)->subtype = value;
-			else if (strncmp(key, "file_name", 9) == 0)
-				(*to_load)->file_name = value;
+			if (strncmp(key, "sys_id", 6) == 0) {
+				(*to_load)->sys_id = malloc(33);
+				if (!(*to_load)->sys_id) {
+					//implement error library
+					return;
+				}
+				strcpy((*to_load)->sys_id, value);
+			}
+			else if (strncmp(key, "table", 5) == 0) {
+				(*to_load)->table = malloc(sizeof(char)*strlen(value)+1);
+				if (!(*to_load)->table) {
+					//implement error library
+					return;
+				}
+				strcpy((*to_load)->table, value);
+			}
+			else if (strncmp(key, "record", 6) == 0) {
+				(*to_load)->record = malloc(sizeof(char)*strlen(value)+1);
+				if (!(*to_load)->record) {
+					//implement error library
+					return;
+				}
+				strcpy((*to_load)->record, value);
+			}
+			else if (strncmp(key, "type", 4) == 0) {
+				(*to_load)->type = malloc(sizeof(char)*strlen(value)+1);
+				if (!(*to_load)->type) {
+					//implement error library
+					return;
+				}
+				strcpy((*to_load)->type, value);
+			}
+			else if (strncmp(key, "subtype", 7) == 0) {
+				(*to_load)->subtype = malloc(sizeof(char)*strlen(value)+1);
+				if (!(*to_load)->subtype) {
+					//implement error library
+					return;
+				}
+				strcpy((*to_load)->subtype, value);
+			}
+			else if (strncmp(key, "file_name", 9) == 0) {
+				(*to_load)->file_name = malloc(sizeof(char)*strlen(value)+1);
+				if (!(*to_load)->file_name) {
+					//implement error library
+					return;
+				}
+				strcpy((*to_load)->file_name, value);
+			}
+			else if (strncmp(key, "file_type", 9) == 0) {
+				(*to_load)->file_type = malloc(sizeof(char)*strlen(value)+1);
+				if (!(*to_load)->file_type) {
+					//implement error library
+					return;
+				}
+				strcpy((*to_load)->file_type, value);
+			}
 		}
 
 		if (reading_value == 0 && file_buffer[i] == ':') {
 			reading_value = 1;
 			back_index = backwards_find_index_from_index(file_buffer, '\n', i);
+
 			tmp = realloc(key, (i - back_index)*sizeof(char));	
 			if (!tmp) {
 				//implement error library
@@ -235,7 +282,12 @@ SN_INSTANCE* load_instances_from_files() {
 		}
 		if (check_for_child_config_file(path_buffer, files[i]) == 0) {
 			if (!first_sn_instance_record_in_list) {
-				first_sn_instance_record_in_list = initialize_sn_instance();
+				first_sn_instance_record_in_list = malloc(sizeof(SN_INSTANCE));
+				if (!first_sn_instance_record_in_list) {
+					//implement error library
+					return NULL;
+				}
+				initialize_sn_instance(&first_sn_instance_record_in_list);
 				if (!first_sn_instance_record_in_list) {
 					//implement error library
 					return NULL;
@@ -243,7 +295,12 @@ SN_INSTANCE* load_instances_from_files() {
 				current = first_sn_instance_record_in_list;
 			}
 			else {
-				current->next = initialize_sn_instance();
+				current->next = malloc(sizeof(SN_INSTANCE));
+				if (!current->next) {
+					//implement error library
+					return NULL;
+				}
+				initialize_sn_instance(&current->next);
 				current = current->next;
 			}
 
@@ -256,6 +313,10 @@ SN_INSTANCE* load_instances_from_files() {
 	}
 
 	return NULL;
+}
+
+void call_send_to_instance() {
+	//post_attachment_to_servicenow("/home/arch/code/c/SNFileSync/misc/test_file", first_sn_source_record_in_list);
 }
 
 SN_SOURCE_RECORD* load_sources_from_sn_instance() {
@@ -283,15 +344,21 @@ SN_SOURCE_RECORD* load_sources_from_sn_instance() {
 			}
 			if (check_for_child_config_file(path_buffer, files[i]) == 0) {
 				if (!first_sn_source_record_in_list) {
-					first_sn_source_record_in_list = initialize_sn_source_record();
+					first_sn_source_record_in_list = malloc(sizeof(SN_SOURCE_RECORD));
 					if (!first_sn_source_record_in_list) {
 						//implement error library
 						return NULL;
 					}
+					initialize_sn_source_record(&first_sn_source_record_in_list);
 					current = first_sn_source_record_in_list;
 				}
 				else {
-					current->next = initialize_sn_source_record();
+					current->next = malloc(sizeof(SN_SOURCE_RECORD));
+					if (!current->next) {
+						//implement error library
+						return NULL;
+					}
+					initialize_sn_source_record(&current->next);
 					current = current->next;
 				}
 
@@ -302,6 +369,9 @@ SN_SOURCE_RECORD* load_sources_from_sn_instance() {
 				strcat(full_path_buffer, "config.txt");
 
 				load_sn_source_record_from_child_config(&current, full_path_buffer);
+				current->instance = looper;
+				//current->instance = malloc(sizeof(looper->host_name) + 4);
+				//strcpy(current->host_name, looper->host_name);
 				//printf("\nLoaded table: %s\n", current->table);
 				//printf("\nLoaded record: %s\n", current->record);
 				//printf("\nLoaded file_name: %s\n", current->file_name);
@@ -322,8 +392,10 @@ void generate_config_files(char* instance, char *username, char *password) {
 		return;
 
 	char buffer[MAX_PATH];
+	char *instance_dir = NULL, *tmp_to_realloc = NULL;
+	get_current_directory(buffer);
 
-	if (ensure_dir_exists(buffer, instance, "") == -1) {
+	if (ensure_dir_exists(buffer, instance, NULL) == -1) {
 		//implement error library
 		return;
 	}
@@ -333,23 +405,39 @@ void generate_config_files(char* instance, char *username, char *password) {
 		return;
 	}
 
-	if (ensure_dir_exists(buffer, "landing", "") == -1) {
+	if (ensure_dir_exists(buffer, "landing", NULL) == -1) {
 		// implement error here
 		return;
 	}
 
+	printf("\nHad buffer before generate: %s\n", buffer);
+
 	SN_INSTANCE *sn_instance = NULL;
-	sn_instance = initialize_sn_instance();
+	//sn_instance = initialize_sn_instance();
+	first_sn_instance_record_in_list = malloc(sizeof(SN_INSTANCE));
+	if (!first_sn_instance_record_in_list) {
+		//implement error library
+		return;
+	}
+	sn_instance = first_sn_instance_record_in_list;
+	initialize_sn_instance(&sn_instance);
+	//sn_instance->host_name = malloc(sizeof(char)*strlen(instance));
+	//strcpy(sn_instance->host_name, instance);
 	sn_instance->host_name = instance;
 	sn_instance->username = username;
 	sn_instance->password = password;
 
-	generate_file_for_instance_config(sn_instance, sn_instance->host_name, "config.txt");
+	generate_file_for_instance_config(sn_instance, sn_instance->host_name, "config.txt\0");
 
 	SN_SOURCE_RECORD* tmp = NULL;
-	tmp = initialize_sn_source_record();
+	//tmp = initialize_sn_source_record();
+	//tmp = malloc(sizeof(SN_SOURCE_RECORD));
+	//if (!tmp) {
+	//	//implement error library
+	//	return;
+	//}
+	//initialize_sn_source_record(&tmp);
 
-	char *instance_dir = NULL;
 	instance_dir = malloc(8);
 	if (!instance_dir) {
 		//implement error library
@@ -365,11 +453,12 @@ void generate_config_files(char* instance, char *username, char *password) {
 		printf("\nFile Name: %s", tmp->file_name);
 		printf("\nType: %s", tmp->type);
 		printf("\nSubType: %s\n---------------\n", tmp->subtype);
-		instance_dir = realloc(instance_dir, (strlen(instance)*sizeof(char)) + 33);
-		if (!instance_dir) {
+		tmp_to_realloc = realloc(instance_dir, (strlen(instance)*sizeof(char)) + 33);
+		if (!tmp_to_realloc) {
 			//implement error library
 			return;
 		}
+		instance_dir = tmp_to_realloc;
 		instance_dir = instance;
 		instance_dir = realloc(instance_dir, (strlen(instance_dir)*sizeof(char)) + 34);
 		if (!instance_dir) {
@@ -383,7 +472,7 @@ void generate_config_files(char* instance, char *username, char *password) {
 		strcat(instance_dir, "/");
 #endif
 		strcat(instance_dir, tmp->sys_id);
-		if (ensure_dir_exists(buffer, instance_dir, "") == -1) {
+		if (ensure_dir_exists(buffer, instance_dir, NULL) == -1) {
 			// implement error here
 			break;
 		}
@@ -402,7 +491,9 @@ void generate_config_files(char* instance, char *username, char *password) {
 
 	free_source_list(first_sn_source_record_in_list);
 	free_json_list(first_json_object_in_list);
+	free_instance_list(first_sn_instance_record_in_list);
 	free(instance_dir);
+	free(tmp_to_realloc);
 	if (first_sn_source_record_in_list == NULL)
 		printf("\nSuccessfully freed source list\n");
 }
@@ -434,23 +525,23 @@ SN_SOURCE_RECORD* pull_sources_from_instance(SN_INSTANCE* instance) {
 	return first_sn_source_record_in_list;
 }
 
-SN_SOURCE_RECORD* initialize_sn_source_record() {
-	SN_SOURCE_RECORD *source_record = NULL;
-	source_record = malloc((sizeof(SN_SOURCE_RECORD)) + 8);
-	if (source_record == NULL) {
-		// Implement error functionality
-		return NULL;
-	}
+void initialize_sn_source_record(SN_SOURCE_RECORD **source_record) {
+	//SN_SOURCE_RECORD *source_record = NULL;
+	//source_record = malloc((sizeof(SN_SOURCE_RECORD)) + 8);
+	//if (source_record == NULL) {
+	//	// Implement error functionality
+	//	return NULL;
+	//}
 
-	source_record->sys_id    = NULL;
-	source_record->file_name = NULL;
-	source_record->next      = NULL;
-	source_record->table     = NULL;
-	source_record->record    = NULL;
-	source_record->type      = NULL;
-	source_record->subtype   = NULL;
-
-	return source_record;
+	(*source_record)->sys_id    = NULL;
+	(*source_record)->file_name = NULL;
+	(*source_record)->next      = NULL;
+	(*source_record)->table     = NULL;
+	(*source_record)->record    = NULL;
+	(*source_record)->type      = NULL;
+	(*source_record)->subtype   = NULL;
+	(*source_record)->file_type = NULL;
+	(*source_record)->instance  = NULL;
 }
 
 SN_SOURCE_RECORD* parse_returned_sn_source_records(char* sources) {
@@ -468,17 +559,23 @@ SN_SOURCE_RECORD* parse_returned_sn_source_records(char* sources) {
 		if (strncmp(first_json_object_in_list->name, "result\0", 6) == 0) {
 			printf("\nReading children of result\n");
 			if (first_json_object_in_list->children) {
-				looper = initialize_json_object();
+				//looper = malloc(sizeof(JSON_OBJECT));
+				//if (!looper) {
+				//	//implement error library
+				//	return NULL;
+				//}
+				//initialize_json_object(&looper);
 				looper = first_json_object_in_list->children;
 				while(looper) {
 					printf("\nHad Child JSON Name: %s\n", looper->name);
 					printf("\nHad Child JSON Value: %s\n", (char *)looper->data);
 					if (!first) {
-						first = initialize_sn_source_record();
+						first = malloc(sizeof(SN_SOURCE_RECORD));
 						if (!first) {
 							//implement error library
 							return NULL;
 						}
+						initialize_sn_source_record(&first);
 					}
 
 					current = first;
@@ -503,9 +600,19 @@ SN_SOURCE_RECORD* parse_returned_sn_source_records(char* sources) {
 						case 5:
 							set_subtype_sn_source_record(&current, (char *)looper->data);
 							break;
+						case 6:
+							//set_filetype_sn_source_record(&current, (char *)looper->data);
+							current->file_type = (char *)looper->data;
+							break;
+							
 					}
 					if (is_sn_source_record_complete(current)) {
-						current->next = initialize_sn_source_record();
+						current->next = malloc(sizeof(SN_SOURCE_RECORD));
+						if (!current->next) {
+							//implement error library
+							return NULL;
+						}
+						initialize_sn_source_record(&current->next);
 						current = current->next;
 						current->next = NULL;
 					}
@@ -562,6 +669,8 @@ void set_name_sn_source_record(SN_SOURCE_RECORD **sn_source_record, char *name) 
 
 	(*sn_source_record)->file_name = name;
 }
+
+
 
 void set_table_sn_source_record(SN_SOURCE_RECORD **sn_source_record, char *table) {
 	//	(*sn_source_record)->table = malloc(sizeof(char) * strlen(table) + 4);
@@ -653,4 +762,23 @@ void set_file_filter(PUSH_CONFIG **ps, char *filter) {
 	//	}
 
 	(*ps)->file_name_filter = filter;
+}
+
+void free_instance_list(SN_INSTANCE *head) {
+	SN_INSTANCE *swap = NULL;
+	printf("\n-------------------------------------\nFreeing Instance List\n---------------------------\n");
+
+	while (head != NULL) {
+		printf("\n Freeing instance node \n");
+		swap = head;
+		head = head->next;
+		//free(swap->sys_id);
+		//free(swap->file_name);
+		//free(swap->table);
+		//free(swap->record);
+		//free(swap->type);
+		//free(swap->subtype);
+		free(swap);
+	}
+
 }

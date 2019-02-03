@@ -14,11 +14,13 @@ JSON_OBJECT* parse_json_from_string(char *json_string) {
 		return NULL;
 	}
 
-	placeholder = initialize_json_object();
+	//placeholder = initialize_json_object();
+	placeholder = malloc(sizeof(JSON_OBJECT));
 	if (!placeholder) {
 		//implement error library
 		return NULL;
 	}
+	initialize_json_object(&placeholder);
 
 	for (; json_string[i+1] != '\0'; i++) {
 		if (json_string[i] == ':' || json_string[i] == ',')
@@ -90,11 +92,13 @@ JSON_OBJECT* parse_json_from_string(char *json_string) {
 		if (placeholder && placeholder->name && (placeholder->data || skip_data)) {
 			skip_data = 0;
 			if (!first) {
-				first = initialize_json_object();
+				//first = initialize_json_object();
+				first = malloc(sizeof(JSON_OBJECT));
 				if (!first) {
 					//implement error library
 					return NULL;
 				}
+				initialize_json_object(&first);
 
 				set_name_json_object(&first, placeholder->name);
 				set_data_json_object(&first, placeholder->data);
@@ -109,7 +113,13 @@ JSON_OBJECT* parse_json_from_string(char *json_string) {
 				}
 
 				if (current_parent->children == NULL) {
-					current_parent->children = initialize_json_object();
+					//current_parent->children = initialize_json_object();
+					current_parent->children = malloc(sizeof(JSON_OBJECT));
+					if (!current_parent->children) {
+						// implement error library
+						return NULL;
+					}
+					initialize_json_object(&current_parent->children);
 					set_name_json_object(&current_parent->children, placeholder->name);
 					set_data_json_object(&current_parent->children, placeholder->data);
 					current_parent->children->next = NULL;
@@ -138,21 +148,19 @@ JSON_OBJECT* parse_json_from_string(char *json_string) {
 	return first;
 }
 
-JSON_OBJECT* initialize_json_object() {
-	JSON_OBJECT *to_initialize = NULL;
-	to_initialize = malloc(sizeof(JSON_OBJECT));
-	if (!to_initialize) {
-		//implement error library
-		return NULL;
-	}
+void initialize_json_object(JSON_OBJECT **to_initialize) {
+	//JSON_OBJECT *to_initialize = NULL;
+	//to_initialize = malloc(sizeof(JSON_OBJECT));
+	//if (!to_initialize) {
+	//	//implement error library
+	//	return NULL;
+	//}
 
-	to_initialize->name		= NULL;
-	to_initialize->data 	= NULL;
-	to_initialize->children = NULL;
-	to_initialize->next 	= NULL;
-	to_initialize->last 	= NULL;
-
-	return to_initialize;
+	(*to_initialize)->name		= NULL;
+	(*to_initialize)->data 	= NULL;
+	(*to_initialize)->children = NULL;
+	(*to_initialize)->next 	= NULL;
+	(*to_initialize)->last 	= NULL;
 }
 
 void insert_into_json_list(JSON_OBJECT *parent, char *name, char *data) {
@@ -167,7 +175,14 @@ void insert_into_json_list(JSON_OBJECT *parent, char *name, char *data) {
 	while(looper->next != NULL)
 		looper = looper->next;
 
-	looper->next = initialize_json_object();
+	//looper->next = initialize_json_object();
+	looper->next = malloc(sizeof(JSON_OBJECT));
+	if (!looper->next) {
+		//implement error library
+		return;
+	}
+
+	initialize_json_object(&looper->next);
 	set_name_json_object(&looper->next, name);
 	set_data_json_object(&looper->next, data);
 	looper->next->next = NULL;
