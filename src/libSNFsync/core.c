@@ -193,16 +193,82 @@ void handle_file_by_source_record_rules(char *file_name, SN_SOURCE_RECORD *sn_so
 			// implement error library
 			return;
 		}
+		perform_actions_on_file(to_buffer, sn_source_record, file_name);
 		post_attachment_to_servicenow(to_buffer, sn_source_record, file_name);
+		move_to_success_directory(sn_source_record, file_name);
 	}
 }
+
+void move_to_success_directory(SN_SOURCE_RECORD *source_record, char *file_name) {
+	char to_buffer[MAX_PATH], from_buffer[MAX_PATH];
+	int success = 0;
+
+
+	get_current_directory(from_buffer);
+	strcpy(to_buffer, from_buffer);
+
+	strcat(from_buffer, "/");
+	strcat(from_buffer, source_record->instance->host_name);
+	strcat(from_buffer, "/");
+	strcat(from_buffer, source_record->sys_id);
+	strcat(from_buffer, "/");
+	strcat(from_buffer, file_name);
+
+	strcat(to_buffer, "/");
+	strcat(to_buffer, source_record->instance->host_name);
+	strcat(to_buffer, "/");
+	strcat(to_buffer, source_record->sys_id);
+	strcat(to_buffer, "/success/");
+	strcat(to_buffer, file_name);
+
+	copy_file(to_buffer, from_buffer);
+	success = ensure_file_exists(to_buffer, NULL, NULL);
+	printf("\n\n File exists?: %d", success);
+	if (success == -1) {
+		//implement error library
+		return;
+	}
+	else {
+		printf("\nHad file\n");
+		if (remove(from_buffer) != 0) {
+			// implement error library
+			return;
+		}
+	}
+}
+
+void strip_lines_from_file_beginning(char *lines, char *file_path) {
+
+}
+
+void perform_actions_on_file(char *file_path, SN_SOURCE_RECORD *source_record, char *file_name) {
+	if (!source_record)
+		return;
+	
+	if (!source_record->action)
+		return;
+
+	SN_ACTION *looper = NULL;
+	looper = source_record->action;
+	while(looper) {
+		if(strncmp(looper->action, DELETE_EXISTING_ATTACHMENTS, 27) == 0) {
+			trigger_attachment_deletion(source_record);
+		}
+		else if(strncmp(looper->action, REMOVE_LINES_FROM_BEGINNING, 27) == 0) {
+			strip_lines_from_file_beginning(looper->lines, file_path);
+		}
+
+		looper = looper->next;
+	}
+}
+
 
 int check_file_name_for_match(char *file_name, SN_SOURCE_RECORD *sn_source_record) {
 	if (!file_name || !sn_source_record || !sn_source_record->file_name)
 		return -1;
 
 	register int i = 0, y = 0;
-	int return_value = 0, wildcard_asterisk = 0, wildcard_percent = 0, index_1 = 0, index_2 = 0;
+	int return_value = 0, wildcard_asterisk = 0, wildcard_percent = 0, index_1 = 0;
 	int file_name_length = 0;
 	char *substr_comp_1 = NULL, *substr_comp_2 = NULL;
 
@@ -379,7 +445,7 @@ int check_file_name_for_match(char *file_name, SN_SOURCE_RECORD *sn_source_recor
 }
 
 void watch_for_file_system_changes() {
-	static int inotify_init_ret = 0, inotify_read = 0, i = 0, set_return_value = -1;
+	static int inotify_init_ret = 0, inotify_read = 0, i = 0;
 	static char buffer[INOTIFY_BUFFER_LENGTH], file_buffer[MAX_PATH];
 	struct inotify_event *event = NULL;
 

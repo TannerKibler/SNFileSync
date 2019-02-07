@@ -40,6 +40,9 @@ void process_new_files();
 int backwards_find_index_from_index(char *str, char toFind, int start);
 void handle_file_by_source_record_rules(char *file_name, SN_SOURCE_RECORD *sn_source_record);
 int check_file_name_for_match(char *file_name, SN_SOURCE_RECORD *sn_source_record);
+void perform_actions_on_file(char *file_path, SN_SOURCE_RECORD *source_record, char *file_name);
+void move_to_success_directory(SN_SOURCE_RECORD *source_record, char *file_name);
+void strip_lines_from_file_beginning(char *lines, char *file_path);
 
 #ifdef __cplusplus
 }

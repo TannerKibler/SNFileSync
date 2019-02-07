@@ -93,7 +93,7 @@ void post_attachment_to_servicenow(char *file_path, SN_SOURCE_RECORD *source_rec
 	CURLcode res;
 	char prefix[9] = "https://\0";
 	char suffix[77] = ".service-now.com/api/now/v1/attachment/file?table_name=";
-	char *url = NULL, *orig = NULL, *body = NULL, *content_type = NULL;
+	char *url = NULL, *body = NULL, *content_type = NULL;
 	struct curl_slist *list = NULL;
 	FILE *fd;
 
@@ -116,8 +116,6 @@ void post_attachment_to_servicenow(char *file_path, SN_SOURCE_RECORD *source_rec
 	
 	fd = fopen(file_path, "rb");
 	if (!fd) {
-		//fprintf(stderr, "Could not open file.\n");
-		//return 1;
 		return;
 	}
 
@@ -131,16 +129,13 @@ void post_attachment_to_servicenow(char *file_path, SN_SOURCE_RECORD *source_rec
 		curl_easy_setopt(curl, CURLOPT_USERNAME, source_record->instance->username);
 		curl_easy_setopt(curl, CURLOPT_PASSWORD, source_record->instance->password);
 		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
-		//curl_easy_setopt(curl, CURLOPT_READDATA, fd);
 		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
-		list = curl_slist_append(list, "Accept:application/json");
+		curl_slist_append(list, "Accept:application/json");
 		list = curl_slist_append(list, content_type);
 		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
 
-//		body = get_body_for_file_post_attachment(file_path, source_record);
-//		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body); /* data goes here */
-
 		body = read_file_to_buffer(file_path);
+		printf("\nRead from File: %s\n", body);
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body);
 
 		res = curl_easy_perform(curl);
@@ -155,10 +150,63 @@ void post_attachment_to_servicenow(char *file_path, SN_SOURCE_RECORD *source_rec
 	free(url);
 }
 
-char* get_body_for_file_post_attachment(char *file_name, SN_SOURCE_RECORD *source_record) {
-	char *body = 0, *file = NULL;
+void trigger_attachment_deletion(SN_SOURCE_RECORD *source_record) {
+	CURL *curl;
+	CURLcode res;
+	char prefix[9] = "https://\0";
+	char suffix[77] = ".service-now.com/api/x_236565_file_sync/file_sync_inbound/delete_attachments\0";
+	char *url = NULL, *body = NULL;
+	struct curl_slist *list = NULL;
 
-	//file = read_file_to_buffer(file_name);
+	url = malloc(sizeof(char)*120);
+
+	strncpy(url, prefix, 9);
+	strcat(url, source_record->instance->host_name);
+	strcat(url, suffix);
+
+	printf("\n\nCalling URL: %s\n\n", url);
+
+	curl_global_init(CURL_GLOBAL_ALL);
+
+	curl = curl_easy_init();
+
+	if(curl) {
+		curl_easy_setopt(curl, CURLOPT_URL, url);
+
+		curl_easy_setopt(curl, CURLOPT_USERNAME, source_record->instance->username);
+		curl_easy_setopt(curl, CURLOPT_PASSWORD, source_record->instance->password);
+		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
+		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+		curl_slist_append(list, "Accept:application/json");
+		list = curl_slist_append(list, "Content-Type:application/json");
+		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
+		body = malloc(sizeof(char)*(100+strlen(source_record->table)));
+		if (!body) {
+			//implement error library
+			return;
+		}
+		strcpy(body, "{\"target_table\":\"");
+		strcat(body, source_record->table);
+		strcat(body, "\",\"target_sys_id\":\"");
+		strcat(body, source_record->record);
+		strcat(body, "\"}\0");
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body);
+
+		res = curl_easy_perform(curl);
+		if(res != CURLE_OK) {
+			fprintf(stderr, "curl_easy_perform() failed: %s\n",
+					curl_easy_strerror(res));
+		}
+		
+		curl_easy_cleanup(curl);
+	}
+	curl_global_cleanup();
+	free(url);
+	free(body);
+}
+
+char* get_body_for_file_post_attachment(char *file_name, SN_SOURCE_RECORD *source_record) {
+	char *body = 0;
 
 	body = malloc(sizeof(char)+200);
 	if (!body) {

@@ -69,6 +69,7 @@ int ensure_dir_exists(char *buffer1, char* l1, char* l2) {
 
 void generate_config_file_from_source_record(SN_SOURCE_RECORD *to_store, char *path, char *file_name) {
 	char buffer[MAX_PATH];
+	SN_ACTION *swp = NULL;
 	get_current_directory(buffer);
 
 #ifdef WINDOWS
@@ -112,6 +113,22 @@ void generate_config_file_from_source_record(SN_SOURCE_RECORD *to_store, char *p
 		fprintf(file_to_write, "subtype:%s\n", to_store->subtype);
 
 	fprintf(file_to_write, "file_name:%s\n", to_store->file_name);
+	if (to_store->action) {
+		fprintf(file_to_write, "action:");
+		swp = to_store->action;
+		while(swp != NULL) {
+			if (!swp->order || !swp->action) {
+				swp = swp->next;
+				continue;
+			}
+			fprintf(file_to_write, "name=%s,", swp->action);
+			if (swp->lines) {
+				fprintf(file_to_write, "lines=%s,", swp->lines);
+			}
+			fprintf(file_to_write, ";");
+			swp = swp->next;
+		}
+	}
 
 	fclose(file_to_write);
 	//free(buffer);
@@ -268,7 +285,7 @@ char** read_files_in_directory(char *directory) {
 int read_files_in_landing_directory(char **file_names) {
 	DIR *d;
 	struct dirent *dir;
-	int i = 0, loop_end = 9;
+	int i = 0;
 	char landing_directory[MAX_PATH];
 
 	get_current_directory(landing_directory);
