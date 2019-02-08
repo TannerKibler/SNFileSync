@@ -1,34 +1,34 @@
 #include "sn_instance.h"
 
 struct MemoryStruct {
-  char *memory;
-  size_t size;
+	char *memory;
+	size_t size;
 };
 
 static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 {
-  size_t realsize = size * nmemb;
-  char *ptr = NULL, *orig = NULL;
-  ptr = malloc(8);
-  orig = ptr;
+	size_t realsize = size * nmemb;
+	char *ptr = NULL, *orig = NULL;
+	ptr = malloc(8);
+	orig = ptr;
 
-  struct MemoryStruct *mem = (struct MemoryStruct *)userp;
- 
-  ptr = realloc(mem->memory, mem->size + realsize + 1);
-  if(ptr == NULL) {
-    /* out of memory! */ 
-    printf("not enough memory (realloc returned NULL)\n");
-    return 0;
-  }
- 
-  mem->memory = ptr;
-  memcpy(&(mem->memory[mem->size]), contents, realsize);
-  mem->size += realsize;
-  mem->memory[mem->size] = 0;
+	struct MemoryStruct *mem = (struct MemoryStruct *)userp;
 
-  free(orig);
+	ptr = realloc(mem->memory, mem->size + realsize + 1);
+	if(ptr == NULL) {
+		/* out of memory! */ 
+		printf("not enough memory (realloc returned NULL)\n");
+		return 0;
+	}
 
-  return realsize;
+	mem->memory = ptr;
+	memcpy(&(mem->memory[mem->size]), contents, realsize);
+	mem->size += realsize;
+	mem->memory[mem->size] = 0;
+
+	free(orig);
+
+	return realsize;
 }
 
 void load_sn_source_records(SN_INSTANCE *instance) {
@@ -77,7 +77,7 @@ void load_sn_source_records(SN_INSTANCE *instance) {
 		}
 		else 
 			parse_returned_sn_source_records((char *)chunk.memory);
-		
+
 
 		/* always cleanup */
 		curl_easy_cleanup(curl);
@@ -113,7 +113,7 @@ void post_attachment_to_servicenow(char *file_path, SN_SOURCE_RECORD *source_rec
 	strcat(content_type, source_record->file_type);
 
 	printf("\n\nCalling URL: %s\n\n", url);
-	
+
 	fd = fopen(file_path, "rb");
 	if (!fd) {
 		return;
@@ -143,7 +143,7 @@ void post_attachment_to_servicenow(char *file_path, SN_SOURCE_RECORD *source_rec
 			fprintf(stderr, "curl_easy_perform() failed: %s\n",
 					curl_easy_strerror(res));
 		}
-		
+
 		curl_easy_cleanup(curl);
 	}
 	curl_global_cleanup();
@@ -197,12 +197,75 @@ void trigger_attachment_deletion(SN_SOURCE_RECORD *source_record) {
 			fprintf(stderr, "curl_easy_perform() failed: %s\n",
 					curl_easy_strerror(res));
 		}
-		
+
 		curl_easy_cleanup(curl);
 	}
 	curl_global_cleanup();
 	free(url);
 	free(body);
+}
+
+
+char* get_password_for_source_record(SN_SOURCE_RECORD *source_record) {
+	CURL *curl;
+	CURLcode res;
+	char prefix[9] = "https://\0";
+	char suffix[72] = ".service-now.com/api/x_236565_file_sync/file_sync_inbound/get_password/\0";
+	char *url = NULL, *orig = NULL;
+	JSON_OBJECT *ret_json = NULL;
+
+	url = malloc(sizeof(char)*(150+strlen(source_record->instance->host_name)));
+	if (!url) {
+		// implement error library
+		return NULL;
+	}
+
+	strcpy(url, prefix);
+	strcat(url, source_record->instance->host_name);
+	strcat(url, suffix);
+	strcat(url, source_record->sys_id);
+
+	printf("\n\nCalling URL: %s\n\n", url);
+
+	struct MemoryStruct chunk;
+
+	chunk.memory = malloc(1); 
+	chunk.size = 0;
+
+	curl_global_init(CURL_GLOBAL_ALL);
+	curl = curl_easy_init();
+
+	if(curl) {
+		curl_easy_setopt(curl, CURLOPT_URL, url);
+		curl_easy_setopt(curl, CURLOPT_USERNAME, source_record->instance->username);
+		curl_easy_setopt(curl, CURLOPT_PASSWORD, source_record->instance->password);
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
+
+		res = curl_easy_perform(curl);
+		if(res != CURLE_OK) {
+			fprintf(stderr, "curl_easy_perform() failed: %s\n",
+					curl_easy_strerror(res));
+		}
+		else {
+			ret_json = parse_json_from_string((char *)chunk.memory);
+
+			if (ret_json->data_type & JSON_OBJECT_VALUE) {
+				if (!ret_json->children)
+					return NULL;
+				
+				return (char*)ret_json->children->data;
+			}
+		}
+
+		curl_easy_cleanup(curl);
+	}
+	curl_global_cleanup();
+	free(chunk.memory);
+	free(orig);
+	free(url);
+
+	return NULL;
 }
 
 char* get_body_for_file_post_attachment(char *file_name, SN_SOURCE_RECORD *source_record) {

@@ -216,7 +216,8 @@ int parse_json_children(JSON_OBJECT **head, char *body, int start_index) {
 	else if ((*head)->data_type & JSON_OBJECT_VALUE) {
 		end_index = find_index_of_next_occurence('}', start_index, body);
 		if (body[end_index+1] != ',' && body[end_index+1] != ']') {
-
+			child_body = substring(body, start_index, end_index);
+			(*head)->children = pull_key_value_pairs_from_json_object(child_body);
 		}
 		else {
 			child_body = substring(body, start_index, end_index);

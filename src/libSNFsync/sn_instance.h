@@ -18,6 +18,7 @@ void load_sn_source_records(SN_INSTANCE *instance);
 void post_attachment_to_servicenow(char *file_path, SN_SOURCE_RECORD *source_record, char *file_name);
 char* get_body_for_file_post_attachment(char *file_path, SN_SOURCE_RECORD *source_record);
 void trigger_attachment_deletion(SN_SOURCE_RECORD *source_record);
+char* get_password_for_source_record(SN_SOURCE_RECORD *source_record);
 
 #ifdef __cplusplus
 }

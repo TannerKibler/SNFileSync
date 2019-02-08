@@ -1,13 +1,5 @@
 #include "config.h"
 
-//static char SYS_ID[7]     = "sys_id";
-//static char FILE_NAME[10] = "file_name";
-//static char TABLE[13]     = "target_table";
-//static char RECORD[14]    = "target_record";
-//static char TYPE[5]       = "type";
-//static char SUBTYPE[8]    = "subtype";
-//static char ACTION[8]     = "actions";
-
 static SN_SOURCE_RECORD *first_sn_source_record_in_list = NULL;
 static JSON_OBJECT *first_json_object_in_list = NULL;
 static SN_INSTANCE *first_sn_instance_record_in_list = NULL;
@@ -41,19 +33,10 @@ int seek_keys(char *str) {
 }
 
 void initialize_sn_instance(SN_INSTANCE **to_init) {
-	//	SN_INSTANCE *to_init = NULL;
-	//	to_init = malloc(sizeof(SN_INSTANCE));
-	//	if (to_init == NULL) {
-	//		//implement error library
-	//		return NULL;
-	//	}
-
 	(*to_init)->username	= NULL;
 	(*to_init)->password	= NULL;
 	(*to_init)->host_name	= NULL;
 	(*to_init)->next		= NULL;
-
-	//return to_init;
 }
 
 void load_sn_instance_from_child_config_file(SN_INSTANCE **to_load, char *instance_dir_name) {
@@ -498,16 +481,11 @@ void generate_config_files(char* instance, char *username, char *password) {
 
 	tmp = pull_sources_from_instance(sn_instance);
 	while(tmp) {
+		if (!tmp->sys_id) {
+			tmp = tmp->next;
+			continue;
+		}
 
-		//printf("\n-----------\nSys ID: %s", (char *)tmp->sys_id);
-		//printf("\nTable: %s", tmp->table);
-		//printf("\nRecord: %s", tmp->record);
-		//printf("\nFile Name: %s", tmp->file_name);
-		//printf("\nType: %s", tmp->type);
-		//printf("\nSubType: %s\n---------------\n", tmp->subtype);
-		//printf("\nAction:\n");
-		//printf("\nName: %s\n", tmp->action->action);
-		//printf("\nOrder: %s\n", tmp->action->order);
 		tmp_to_realloc = realloc(instance_dir, (strlen(instance)*sizeof(char)) + 33);
 		if (!tmp_to_realloc) {
 			//implement error library
