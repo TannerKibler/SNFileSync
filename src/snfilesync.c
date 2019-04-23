@@ -50,8 +50,8 @@ int main (int argc, char **argv){
 			case 'r':
 				load_instances_from_files();
 				//load_sources_from_sn_instance();
-				pass = get_password_for_source_record(get_first_sn_source_record());
-				printf("\nGot Password: %s\n", pass);
+				//pass = get_password_for_source_record(get_first_sn_source_record());
+				//printf("\nGot Password: %s\n", pass);
 		}
 
 		free(pass);
